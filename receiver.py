@@ -1,7 +1,6 @@
 import pyaudio
 import sys
 import socket
-import pyrtp_2 as rtp
 
 
 HOST = sys.argv[1]
@@ -61,11 +60,10 @@ print('Socket bind succeed.')
 try:
     while True:
         new_data = sock.recv(BROADCAST_SIZE)
+        print(new_data)
 
-        rtp_packet = rtp.DecodeRTP(new_data)
-        print(rtp_packet['payload'].decode())
         ##break
-        data += rtp_packet['payload']
+        data += new_data
         if len(data) >= BUFFER_SIZE and not is_receiving:
             is_receiving = True
 

@@ -1,17 +1,18 @@
+from struct import pack
 import pyaudio
 import sys
 import socket
 import datetime
-import pyrtp
+import pyrtp_2 as rtp
 import random
-import sounddevice as sd
+
 HOST = sys.argv[1]
 PORT = sys.argv[2]
 
-data = bytes() # Stream of audio bytes
+data = bytes() # Stream of audio bytes 
 
-BROADCAST_SIZE = 640
-CHUNK_SIZE = 320
+CHUNK_SIZE = 1024 * 2
+BROADCAST_SIZE = 1024
 CHANNELS = 1
 FORMAT = pyaudio.paInt16 # 2 bytes size
 RATE = 16000
@@ -20,21 +21,24 @@ RATE = 16000
 p = pyaudio.PyAudio()
 
 # define callback (2)
-def sd_callback(indata, frame, time, status):
+def pyaudio_callback(in_data, frame_count, time_info, status):
     global data
-    indata= bytes(indata)
-    print(indata, len(indata), type(indata))
-    data += indata
+    data += in_data
+    return (None, pyaudio.paContinue)
 
-    return None
 # open stream (3)
-stream = sd.InputStream(device= "default"  ,channels=CHANNELS, samplerate=RATE, callback=sd_callback)
+stream = p.open(format=FORMAT,
+                channels=CHANNELS,
+                rate=RATE,
+                input=True,
+                frames_per_buffer=CHUNK_SIZE,
+                stream_callback=pyaudio_callback)
 
 # start the stream (4)
-stream.start()
+stream.start_stream()
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-#sock.bind((HOST, int(PORT)))data
+#sock.bind((HOST, int(PORT)))
 
 def send_data():
     global data
@@ -49,9 +53,11 @@ def send_data():
                     'timestamp' : random.randint(1,9999),
                     'ssrc' : 185755418,
                     'payload' : data}
-        rtp_packet = pyrtp.GenerateRTP(packet_vars)
-        #print(data, type(data))
-        sock.sendto(data[:BROADCAST_SIZE], (HOST, int(PORT)))
+        rtp_packet = rtp.GenerateRTP(packet_vars)
+
+        sock.sendto(rtp_packet[:BROADCAST_SIZE], (HOST, int(PORT)))
+        print(rtp_packet[:BROADCAST_SIZE])
+
         data = data[BROADCAST_SIZE:]
         print(f'Sent {str(BROADCAST_SIZE)} bytes of audio. {datetime.datetime.now().time()}')
 
@@ -60,7 +66,7 @@ try:
         send_data()
 except KeyboardInterrupt:
     print('\nClosing stream...')
-    stream.stop()
+    stream.stop_stream()
     stream.close()
-    #p.terminate()
+    p.terminate()
     sock.close()

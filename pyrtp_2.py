@@ -61,6 +61,9 @@ def DecodeRTP(packet_bytes):
     packet_vars['sequence_number'] = int(packet_bytes[4:8], 16)
     packet_vars['timestamp'] = int(packet_bytes[8:16], 16)
     packet_vars['ssrc']  = int(packet_bytes[16:24], 16)
-    packet_vars['payload'] = bytes.fromhex(packet_bytes[24:])
 
+    payload = packet_bytes[24:]
+    payload = int(payload, 16)
+    payload = format(payload, 'b')
+    packet_vars['payload'] = payload
     return packet_vars
