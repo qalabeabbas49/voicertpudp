@@ -1,7 +1,7 @@
 import pyaudio
 import sys
 import socket
-
+import pyrtp_2 as rtp
 
 HOST = sys.argv[1]
 PORT = sys.argv[2]
@@ -9,7 +9,7 @@ PORT = sys.argv[2]
 data = bytes() # Stream of audio bytes
 is_receiving = False
 
-CHUNK_SIZE = 1024 *2     # Size of frame window to write audio (frames_per_buffer)
+CHUNK_SIZE = 1024  * 2     # Size of frame window to write audio (frames_per_buffer)
 BROADCAST_SIZE = 1024  # Socket receives audio with this size
 BUFFER_SIZE = BROADCAST_SIZE * 10       # Receive this amount of data before playback
 CHANNELS = 1
@@ -27,7 +27,7 @@ def pyaudio_callback(in_data, frame_count, time_info, status):
     global data
     try:
         # Cut the data, if it started to bufferize 
-        if len(data) >= BUFFER_SIZE * 20:
+        if len(data) >= BUFFER_SIZE * 2:
             print('Cutting Audio Buffer..')
             data = data[-BUFFER_SIZE:]
         avail_data_count = min(frame_count * CHANNELS * 2, len(data))
@@ -60,10 +60,14 @@ print('Socket bind succeed.')
 try:
     while True:
         new_data = sock.recv(BROADCAST_SIZE)
-        print(new_data)
+        print(f"Incomming raw data : {type(new_data)}")
+        
 
+        rtp_packet = rtp.DecodeRTP(new_data)
+        print(f"payload Type after decoding: {type(rtp_packet['payload'])}")
+        payload = rtp_packet['payload'].decode()
         ##break
-        data += new_data
+        data += rtp_packet['payload']
         if len(data) >= BUFFER_SIZE and not is_receiving:
             is_receiving = True
 
