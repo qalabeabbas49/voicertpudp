@@ -35,7 +35,7 @@ def GenerateRTP(packet_vars):
 
     packet = byte1 + byte2 + sequence_number + timestamp + ssrc + payload
 
-    return packet.encode('utf-8')
+    return packet.encode()
 
 
 def DecodeRTP(packet_bytes):

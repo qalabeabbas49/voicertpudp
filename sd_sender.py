@@ -3,8 +3,8 @@ import pyaudio
 import sys
 import socket
 import datetime
-import pyrtp_2 as rtp
 import random
+import sounddevice as sd
 
 HOST = sys.argv[1]
 PORT = sys.argv[2]
@@ -42,22 +42,10 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 def send_data():
     global data
-    print()
     if (len(data) > BROADCAST_SIZE):
-        packet_vars = {'version' : 2,
-                    'padding' : 0,
-                    'extension' : 0,
-                    'csi_count' : 0,
-                    'marker' : 0,
-                    'payload_type' : 97,
-                    'sequence_number' : random.randint(1,9999),
-                    'timestamp' : random.randint(1,9999),
-                    'ssrc' : 185755418,
-                    'payload' : data}
-        rtp_packet = rtp.GenerateRTP(packet_vars)
-
-        sock.sendto(rtp_packet[:BROADCAST_SIZE], (HOST, int(PORT)))
-        print(rtp_packet[:BROADCAST_SIZE])
+  
+        sock.sendto(data[:BROADCAST_SIZE], (HOST, int(PORT)))
+        print(data[:BROADCAST_SIZE])
 
         data = data[BROADCAST_SIZE:]
         print(f'Sent {str(BROADCAST_SIZE)} bytes of audio. {datetime.datetime.now().time()}')
