@@ -9,8 +9,11 @@ PORT = sys.argv[2]
 data = bytes() # Stream of audio bytes
 is_receiving = False
 
-CHUNK_SIZE = 1024  * 2     # Size of frame window to write audio (frames_per_buffer)
-BROADCAST_SIZE = 1024  # Socket receives audio with this size
+
+CHUNK_SIZE = 1024     # Size of frame window to write audio (frames_per_buffer)
+Header = 24
+Payload = 1024
+BROADCAST_SIZE = Header + Payload   # Socket receives audio with this size
 BUFFER_SIZE = BROADCAST_SIZE * 10       # Receive this amount of data before playback
 CHANNELS = 1
 FORMAT = pyaudio.paInt16 # 2 bytes size
@@ -60,14 +63,15 @@ print('Socket bind succeed.')
 try:
     while True:
         new_data = sock.recv(BROADCAST_SIZE)
-        print(f"Incomming raw data : {type(new_data)}")
-        
-
+        #print(f"Incomming raw data : {len(new_data)}")
+    
         rtp_packet = rtp.DecodeRTP(new_data)
-        print(f"payload Type after decoding: {type(rtp_packet['payload'])}")
-        payload = rtp_packet['payload'].decode()
+        #print(rtp_packet)
+        print(f" Receiving Info\n Sequence Number: {rtp_packet['sequence_number']}\n Payload Size : {len(rtp_packet['payload'])}\n Packet Size : {len(new_data)}")
+        #payload = rtp_packet['payload']
         ##break
         data += rtp_packet['payload']
+        print(len(data))
         if len(data) >= BUFFER_SIZE and not is_receiving:
             is_receiving = True
 

@@ -1,6 +1,3 @@
-from email import header
-
-
 def GenerateRTP(packet_vars):
 
     #The first twelve octates are present in every RTP packet.
@@ -34,11 +31,11 @@ def GenerateRTP(packet_vars):
     timestamp = format(packet_vars['timestamp'], 'x').zfill(8)
     ssrc = format(packet_vars['ssrc'], 'x').zfill(8)
 
-    payload = packet_vars['payload']
+    payload = packet_vars['payload'].hex()
 
-    header = byte1 + byte2 + sequence_number + timestamp + ssrc
-    packet = b''.join([header.encode(), payload])
-    return packet
+    packet = byte1 + byte2 + sequence_number + timestamp + ssrc + payload
+
+    return packet.encode()
 
 
 def DecodeRTP(packet_bytes):
@@ -66,7 +63,9 @@ def DecodeRTP(packet_bytes):
     packet_vars['ssrc']  = int(packet_bytes[16:24], 16)
 
 
-    packet_vars['payload'] =  packet_bytes[24:]
+    payload = packet_bytes[24:]
+
+    packet_vars['payload'] =  bytes.fromhex(payload.decode())
     #print(f"payload 4: {type(payload)} {payload}")
 
     return packet_vars

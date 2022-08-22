@@ -10,8 +10,8 @@ PORT = sys.argv[2]
 
 data = bytes() # Stream of audio bytes 
 
-CHUNK_SIZE = 1024 * 2
-BROADCAST_SIZE = 1024
+CHUNK_SIZE = 4096
+BROADCAST_SIZE = 8192
 CHANNELS = 1
 FORMAT = pyaudio.paInt16 # 2 bytes size
 RATE = 16000
@@ -44,7 +44,7 @@ def send_data():
     if (len(data) > BROADCAST_SIZE):
   
         sock.sendto(data[:BROADCAST_SIZE], (HOST, int(PORT)))
-        print(data[:BROADCAST_SIZE])
+        #print(data[:BROADCAST_SIZE])
 
         data = data[BROADCAST_SIZE:]
         print(f'Sent {str(BROADCAST_SIZE)} bytes of audio. {datetime.datetime.now().time()}')
